@@ -27,7 +27,7 @@ export default function ProfilePage() {
       }
 
       try {
-        const userData = await getUserInfo(token)
+        const userData = await getUserInfo(token, user?.id || "")
         setUser(userData)
         setEditedUser(userData)
       } catch (error) {
