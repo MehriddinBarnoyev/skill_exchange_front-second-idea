@@ -34,10 +34,14 @@ export default function RegisterPage() {
     try {
       if (!otpSent) {
         // Use the register function from authApi
-        const response = await register({ name, email, password })
+        const response = await register(name, email, password)
         if (response.message === "OTP sent to email") {
           setOtpSent(true)
-          setUserId(response.user_id)
+          if (response.user_id) {
+            setUserId(response.user_id)
+          } else {
+            throw new Error("User ID is undefined")
+          }
           toast({
             title: "OTP Sent",
             description: "Please check your email for the verification code.",
@@ -45,7 +49,7 @@ export default function RegisterPage() {
         }
       } else {
         // Use the verifyOtp function from authApi
-        const response = await verifyOtp({ email, otp, user_id: userId || undefined })
+        const response = await verifyOtp(email, otp, userId || undefined)
         handleSuccessfulRegistration(response)
       }
     } catch (error) {

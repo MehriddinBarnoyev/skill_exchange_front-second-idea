@@ -105,7 +105,7 @@ export default function UserProfile() {
                           <AvatarImage src={profile.profile_picture} alt={profile.name} />
                           <AvatarFallback className="text-2xl">{profile.name.charAt(0)}</AvatarFallback>
                         </Avatar>
-                        {user.id !== profile.id && (
+                        {user && user.id !== profile.id && (
                           <Button onClick={handleSendRequest} disabled={isSendingRequest} className="w-full">
                             {isSendingRequest ? (
                               <Loader2 className="h-4 w-4 animate-spin mr-2" />

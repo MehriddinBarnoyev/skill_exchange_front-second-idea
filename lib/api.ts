@@ -46,6 +46,7 @@ export interface Skill {
 }
 
 export interface SkillWithUser extends Skill {
+  skill_name: any
   user_id: string
   user_name: string
 }
