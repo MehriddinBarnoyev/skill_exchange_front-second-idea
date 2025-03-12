@@ -14,7 +14,6 @@ import {
   addSkill,
   updateSkill,
   deleteSkill,
-  uploadProfileImage,
   type User,
   type Skill,
 } from "@/lib/api"
@@ -25,7 +24,6 @@ import { FriendsModal } from "@/components/FriendsModal"
 import { ProfileHeader } from "@/components/profile/ProfileHeader"
 import { ProfileDetails } from "@/components/profile/ProfileDetails"
 import { SkillsSection } from "@/components/profile/SkillsSection"
-import { AvatarUpload } from "@/components/profile/AvatarUpload"
 
 export default function UserProfile() {
   const [user, setUser] = useState<any>(null)
@@ -159,27 +157,11 @@ export default function UserProfile() {
     setEditedUser({ ...editedUser, [name]: value })
   }
 
-  const handleImageUpload = async (file: File) => {
-    try {
-      const token = localStorage.getItem("token")
-      if (!token) {
-        router.push("/login")
-        return
-      }
-      const imagePath = await uploadProfileImage(token, file)
-      setUser((prevUser) => ({ ...prevUser!, profilePicture: `http://localhost:5000${imagePath}` }))
-      setEditedUser((prevUser) => ({ ...prevUser!, profilePicture: `http://localhost:5000${imagePath}` }))
-      toast({
-        title: "Success",
-        description: "Profile picture updated successfully",
-      })
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to update profile picture",
-        variant: "destructive",
-      })
-    }
+  const handleImageUpload = (profilePicture: string) => {
+    setUser((prevUser) => ({
+      ...prevUser,
+      profilePicture,
+    }))
   }
 
   if (isLoading) {
@@ -216,12 +198,8 @@ export default function UserProfile() {
         isOwnProfile={isOwnProfile}
         onEdit={handleEdit}
         onShowFriends={() => setShowFriendsModal(true)}
+        onImageUpload={handleImageUpload}
       />
-      {isOwnProfile && (
-        <div className="mb-4">
-          <AvatarUpload src={user.profilePicture} alt={user.name || "Profile Picture"} onUpload={handleImageUpload} />
-        </div>
-      )}
 
       <Card className="mb-8 shadow-sm">
         <CardContent>

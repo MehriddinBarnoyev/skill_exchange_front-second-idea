@@ -21,3 +21,24 @@ export const sendConnectionRequest = async (token: string, senderId: string, rec
   }
 }
 
+export const getFriends = async (user_id: string) => {
+  try {
+    const response = await axios.get(`${API_URL}/connections/friends/${user_id}`)
+    return response.data
+  } catch (error) {
+    console.log(error);
+    console.log("Error fetching friends");
+    throw error
+
+  }
+}
+
+export const deleteFriend = async (user_id:string, friendId: string) => {
+  try {
+    
+  } catch (error) {
+    console.error(error);
+    throw error
+    
+  }
+}

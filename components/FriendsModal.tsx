@@ -1,64 +1,79 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { toast } from "@/components/ui/use-toast"
-import { Loader2, X, MessageSquare } from "lucide-react"
-import { connectionApi, type Connection } from "@/lib/api"
-import Link from "next/link"
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { toast } from "@/components/ui/use-toast";
+import { Loader2, X, MessageSquare } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { getFriends } from "@/lib/connections";
+
+interface Connection {
+  id: string;
+  connected_user_id: string;
+  connected_user_name: string;
+  connected_user_profession: string;
+  connected_user_profile_picture: string;
+}
 
 interface FriendsModalProps {
-  isOpen: boolean
-  onClose: () => void
-  userId: string
+  isOpen: boolean;
+  onClose: () => void;
+  userId: string;
 }
 
 export function FriendsModal({ isOpen, onClose, userId }: FriendsModalProps) {
-  const [friends, setFriends] = useState<Connection[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+  const [friends, setFriends] = useState<Connection[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
     if (isOpen) {
-      fetchFriends()
+      fetchFriends();
     }
-  }, [isOpen])
+  }, [isOpen]);
 
   const fetchFriends = async () => {
     try {
-      setIsLoading(true)
-      const token = localStorage.getItem("token")
+      setIsLoading(true);
+      const token = localStorage.getItem("token");
 
       if (!token) {
         toast({
           title: "Authentication Error",
           description: "Please log in to view friends",
           variant: "destructive",
-        })
-        return
+        });
+        return;
       }
 
-      const friendsList = await connectionApi.getFriends(userId, token)
-      setFriends(friendsList)
+      const friendsList = await getFriends(userId);
+      setFriends(friendsList);
     } catch (error) {
-      console.error("Failed to fetch friends:", error)
+      console.error("Failed to fetch friends:", error);
       toast({
         title: "Error",
         description: "Failed to load friends list",
         variant: "destructive",
-      })
+      });
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
-  if (!isOpen) return null
+  if (!isOpen) return null;
 
+  const numberOfFriends = friends.length;
+
+  const handleSkillClick = (userId: string) => {
+    router.push(`/user/${userId}`);
+  };
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg shadow-lg w-full max-w-md max-h-[80vh] overflow-y-auto">
         <div className="flex justify-between items-center p-4 border-b">
-          <h2 className="text-xl font-semibold">Friends</h2>
+          <h2 className="text-xl font-semibold">Friends {numberOfFriends}</h2>
           <Button variant="ghost" size="icon" onClick={onClose}>
             <X className="h-5 w-5" />
           </Button>
@@ -76,22 +91,36 @@ export function FriendsModal({ isOpen, onClose, userId }: FriendsModalProps) {
           ) : (
             <div className="space-y-4">
               {friends.map((friend) => (
-                <div key={friend.id} className="flex items-center justify-between p-4 border rounded-lg">
+                <div
+                  key={friend.id}
+                  className="flex items-center justify-between p-4 border rounded-lg"
+                >
                   <div className="flex items-center space-x-4">
                     <Avatar>
-                      <AvatarImage src={friend.connected_user_profile_picture} alt={friend.connected_user_name} />
-                      <AvatarFallback>{friend.connected_user_name.charAt(0)}</AvatarFallback>
+                      <AvatarImage
+                        src={friend.connected_user_profile_picture}
+                        alt={friend.connected_user_name}
+                      />
+                      <AvatarFallback>
+                        {friend.connected_user_name.charAt(0)}
+                      </AvatarFallback>
                     </Avatar>
                     <div>
-                      <h4 className="font-medium">{friend.connected_user_name}</h4>
+                      <h4 className="font-medium">
+                        {friend.connected_user_name}
+                      </h4>
                       {friend.connected_user_profession && (
-                        <p className="text-sm text-muted-foreground">{friend.connected_user_profession}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {friend.connected_user_profession}
+                        </p>
                       )}
                     </div>
                   </div>
                   <div className="flex space-x-2">
                     <Button asChild variant="outline" size="sm">
-                      <Link href={`/user/${friend.connected_user_id}`}>View Profile</Link>
+                      <Link href={`/user/${friend.connected_user_id}`}>
+                        View Profile
+                      </Link>
                     </Button>
                     <Button size="sm">
                       <MessageSquare className="h-4 w-4 mr-2" />
@@ -105,6 +134,5 @@ export function FriendsModal({ isOpen, onClose, userId }: FriendsModalProps) {
         </div>
       </div>
     </div>
-  )
+  );
 }
-

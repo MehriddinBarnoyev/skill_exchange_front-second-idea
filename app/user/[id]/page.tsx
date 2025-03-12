@@ -75,8 +75,8 @@ export default function UserProfilePage() {
       {/* Hero section with background */}
       <div className="relative mb-8 rounded-xl overflow-hidden">
         <div className="h-64 bg-gradient-to-r from-blue-600 to-purple-600"></div>
-        <div className="absolute bottom-0 left-0 w-full transform translate-y-1/2 px-6">
-          <div className="flex flex-col md:flex-row items-center">
+        <div className="absolute bottom-16 left-0 w-full transform translate-y-1/2 px-6">
+          <div className="flex flex-col md:flex-row items-start">
             <Avatar className="h-32 w-32 border-4 border-white shadow-xl">
               <AvatarImage
                 src={`http://localhost:5000${user.profile_pic}`}

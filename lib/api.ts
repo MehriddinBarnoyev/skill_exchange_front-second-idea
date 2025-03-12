@@ -8,6 +8,11 @@ export interface AuthResponse {
 }
 
 export interface User {
+  education: string
+  birth_date: any
+  interests: string
+  profession: string
+  location: string
   id: string
   name: string
   email: string
@@ -229,12 +234,12 @@ export async function getUserReviews(userId: string, token: string): Promise<any
   }
 }
 
-export async function uploadProfileImage(token: string, file: File): Promise<string> {
+export async function uploadProfileImage(token: string, file: File, user_id: string): Promise<string> {
   const formData = new FormData()
   formData.append("profile_image", file)
 
   try {
-    const response = await api.post("/users/upload-profile-image", formData, {
+    const response = await api.post(`/users/upload-profile-image/${user_id}`, formData, {
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "multipart/form-data",
@@ -246,3 +251,16 @@ export async function uploadProfileImage(token: string, file: File): Promise<str
   }
 }
 
+export async function completeUserProfile(token: string, user_id: string, formData: { location: string; profession: string; gender: string; education: string; birth_date: string; interests: string }): Promise<User> {
+  try {
+    const response = await api.post(`/users/complete-profile/${user_id}`, formData, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    })
+    return response.data
+  } catch (error: any) {
+    throw new Error(error.response?.data?.message || "Failed to complete user profile")
+  }
+}
