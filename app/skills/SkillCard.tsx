@@ -7,6 +7,8 @@ import { Code, Palette, BookOpen, Database, Globe, Cpu, Music, Camera, Briefcase
 import { useRouter } from "next/navigation"
 import type { SkillWithUser } from "@/lib/api"
 
+const API_URL = "http://localhost:5000"
+
 interface SkillCardProps {
   skill: SkillWithUser
 }
@@ -18,6 +20,7 @@ export function SkillCard({ skill }: SkillCardProps) {
     router.push(`/user/${skill.user_id}`)
   }
 
+  
   return (
     <Card
       className="bg-white border-0 shadow-lg hover:shadow-xl rounded-xl cursor-pointer transition-all duration-300 hover:scale-105 overflow-hidden skill-card-animation"
@@ -56,10 +59,10 @@ export function SkillCard({ skill }: SkillCardProps) {
 
         <div className="flex items-center mt-4 pt-4 border-t border-gray-100">
           <Avatar className="h-8 w-8 mr-2">
-            <AvatarImage
-              src={`https://ui-avatars.com/api/?name=${encodeURIComponent(skill.user_name)}&background=random`}
-            />
-            <AvatarFallback>{skill.user_name.charAt(0)}</AvatarFallback>
+            <AvatarImage src={skill.profile_pic ? `${API_URL}${skill.profile_pic}` : undefined} alt={skill.user_name} />
+            <AvatarFallback className="bg-gray-200 text-gray-600">
+              {skill.user_name.charAt(0).toUpperCase()}
+            </AvatarFallback>
           </Avatar>
           <span className="text-sm text-gray-700 font-medium">{skill.user_name}</span>
         </div>

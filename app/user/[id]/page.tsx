@@ -15,9 +15,6 @@ import {
   Calendar,
   GraduationCap,
   LinkIcon,
-  Github,
-  Twitter,
-  Linkedin,
 } from "lucide-react";
 import { ConnectionRequestButton } from "@/components/ConnectionRequestButton";
 
@@ -121,11 +118,6 @@ export default function UserProfilePage() {
               )}
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="flex items-center text-gray-700">
-                  <Mail className="h-5 w-5 mr-3 text-blue-500" />
-                  <span>{user.email}</span>
-                </div>
-
                 {user.location && (
                   <div className="flex items-center text-gray-700">
                     <MapPin className="h-5 w-5 mr-3 text-blue-500" />
@@ -155,50 +147,6 @@ export default function UserProfilePage() {
                     </span>
                   </div>
                 )}
-              </div>
-
-              {/* Social links - these would be populated if the user had them */}
-              <div className="mt-6 flex space-x-4">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="rounded-full"
-                  asChild
-                >
-                  <a href="#" target="_blank" rel="noopener noreferrer">
-                    <Twitter className="h-5 w-5 text-blue-400" />
-                  </a>
-                </Button>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="rounded-full"
-                  asChild
-                >
-                  <a href="#" target="_blank" rel="noopener noreferrer">
-                    <Linkedin className="h-5 w-5 text-blue-700" />
-                  </a>
-                </Button>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="rounded-full"
-                  asChild
-                >
-                  <a href="#" target="_blank" rel="noopener noreferrer">
-                    <Github className="h-5 w-5" />
-                  </a>
-                </Button>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="rounded-full"
-                  asChild
-                >
-                  <a href="#" target="_blank" rel="noopener noreferrer">
-                    <LinkIcon className="h-5 w-5 text-gray-600" />
-                  </a>
-                </Button>
               </div>
             </CardContent>
           </Card>

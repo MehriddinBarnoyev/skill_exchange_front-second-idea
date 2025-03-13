@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { toast } from "@/components/ui/use-toast"
 import { PlusCircle, Loader2, Pencil, Trash2 } from "lucide-react"
-import type { Skill } from "@/lib/api"
+import { addSkill, type Skill } from "@/lib/api"
 
 interface SkillsSectionProps {
   skills: Skill[]
@@ -33,7 +33,7 @@ export function SkillsSection({ skills, isOwnProfile, onAddSkill, onUpdateSkill,
       const userId = localStorage.getItem("userId")
       if (!token || !userId) return
 
-      await onAddSkill(token, userId, newSkill)
+      await addSkill(token, userId, newSkill)
       setNewSkill({ name: "", description: "", level: "" })
       setIsAddingSkill(false)
       toast({
@@ -133,6 +133,7 @@ export function SkillsSection({ skills, isOwnProfile, onAddSkill, onUpdateSkill,
               <option value="beginner">Beginner</option>
               <option value="intermediate">Intermediate</option>
               <option value="advanced">Advanced</option>
+              <option value="expert">Expert</option>
             </select>
             <Button onClick={handleAddSkill} disabled={isSkillLoading}>
               {isSkillLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Add Skill"}

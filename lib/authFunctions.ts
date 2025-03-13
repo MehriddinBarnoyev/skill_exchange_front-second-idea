@@ -87,7 +87,8 @@ export const handleOTPVerification = async (email: string, otp: string) => {
       throw new Error("OTP must be 6 digits long")
     }
 
-    const response = await verifyOTP(email, otp)
+    const user_id = "some_user_id" // Replace with actual user_id
+    const response = await verifyOTP(email, otp, user_id)
 
     toast({
       title: "OTP Verification Successful",

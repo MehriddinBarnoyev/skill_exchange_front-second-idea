@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react"
 import { Badge } from "@/components/ui/badge"
-import { connectionApi } from "@/lib/api"
 import { Bell } from "lucide-react"
 import { ConnectionRequestModal } from "./ConnectionRequestModal"
+import { getConnectionRequests } from "@/lib/requests"
 
 export function ConnectionRequestBadge() {
   const [requestCount, setRequestCount] = useState(0)
@@ -22,7 +22,7 @@ export function ConnectionRequestBadge() {
           return
         }
 
-        const requests = await connectionApi.getConnectionRequests(userId, token)
+        const requests = await getConnectionRequests(userId)
         setRequestCount(requests.length)
       } catch (error) {
         console.error("Failed to fetch connection request count:", error)

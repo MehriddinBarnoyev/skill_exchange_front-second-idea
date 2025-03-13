@@ -1,94 +1,94 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { toast } from "@/components/ui/use-toast"
-import { Loader2, UserCheck, UserX, X } from "lucide-react"
-import { connectionApi, type ConnectionRequest } from "@/lib/api"
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { toast } from "@/components/ui/use-toast";
+import { Loader2, UserCheck, UserX, X } from "lucide-react";
+import { ConnectionRequest, getConnectionRequests, respondToConnectionRequest } from "@/lib/requests";
 
 interface ConnectionRequestModalProps {
-  isOpen: boolean
-  onClose: () => void
+  isOpen: boolean;
+  onClose: () => void;
 }
 
 export function ConnectionRequestModal({ isOpen, onClose }: ConnectionRequestModalProps) {
-  const [requests, setRequests] = useState<ConnectionRequest[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [respondingTo, setRespondingTo] = useState<string | null>(null)
+  const [requests, setRequests] = useState<ConnectionRequest[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [respondingTo, setRespondingTo] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOpen) {
-      fetchConnectionRequests()
+      fetchConnectionRequests();
     }
-  }, [isOpen])
+  }, [isOpen]);
 
   const fetchConnectionRequests = async () => {
     try {
-      setIsLoading(true)
-      const token = localStorage.getItem("token")
-      const userId = localStorage.getItem("userId")
+      setIsLoading(true);
+      const token = localStorage.getItem("token");
+      const userId = localStorage.getItem("userId");
 
       if (!token || !userId) {
         toast({
           title: "Authentication Error",
           description: "Please log in to view connection requests",
           variant: "destructive",
-        })
-        return
+        });
+        return;
       }
 
-      const connectionRequests = await connectionApi.getConnectionRequests(userId, token)
-      setRequests(connectionRequests)
+      const connectionRequests = await getConnectionRequests(userId);
+      console.log("Connection requests:", connectionRequests);
+      
+      setRequests(connectionRequests);
     } catch (error) {
-      console.error("Failed to fetch connection requests:", error)
+      console.error("Failed to fetch connection requests:", error);
       toast({
         title: "Error",
         description: "Failed to load connection requests",
         variant: "destructive",
-      })
+      });
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleRespond = async (requestId: string, action: "accepted" | "rejected") => {
     try {
-      setRespondingTo(requestId)
-      const token = localStorage.getItem("token")
+      setRespondingTo(requestId);
+      const token = localStorage.getItem("token");
 
       if (!token) {
         toast({
           title: "Authentication Error",
           description: "Please log in to respond to connection requests",
           variant: "destructive",
-        })
-        return
+        });
+        return;
       }
 
-      await connectionApi.respondToRequest(requestId, action, token)
-
-      // Update the local state to remove the responded request
-      setRequests(requests.filter((request) => request.id !== requestId))
+      await respondToConnectionRequest(token, requestId, action);
+      setRequests((prevRequests) => prevRequests.filter((request) => request.id !== requestId));
 
       toast({
         title: action === "accepted" ? "Request Accepted" : "Request Rejected",
         description:
           action === "accepted" ? "You are now connected with this user" : "Connection request has been rejected",
-      })
+      });
     } catch (error) {
-      console.error(`Failed to ${action} connection request:`, error)
+      console.error(`Failed to ${action} connection request:`, error);
       toast({
         title: "Error",
         description: `Failed to ${action} connection request`,
         variant: "destructive",
-      })
+      });
     } finally {
-      setRespondingTo(null)
+      setRespondingTo(null);
     }
-  }
+  };
 
-  if (!isOpen) return null
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -115,8 +115,8 @@ export function ConnectionRequestModal({ isOpen, onClose }: ConnectionRequestMod
                 <div key={request.id} className="flex items-center justify-between p-4 border rounded-lg">
                   <div className="flex items-center space-x-4">
                     <Avatar>
-                      <AvatarImage src={request.sender_profile_picture} alt={request.sender_name} />
-                      <AvatarFallback>{request.sender_name.charAt(0)}</AvatarFallback>
+                      <AvatarImage src={`http://localhost:5000${request.sender_profile_pic}`} alt={request.sender_name} />
+                      <AvatarFallback>{request.sender_name?.charAt(0) ?? 'N/A'}</AvatarFallback>
                     </Avatar>
                     <div>
                       <h4 className="font-medium">{request.sender_name}</h4>
@@ -159,6 +159,5 @@ export function ConnectionRequestModal({ isOpen, onClose }: ConnectionRequestMod
         </div>
       </div>
     </div>
-  )
+  );
 }
-

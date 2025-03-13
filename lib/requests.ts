@@ -3,6 +3,9 @@ import axios from "axios"
 const API_URL = "http://localhost:5000/api"
 
 export interface ConnectionRequest {
+  sender_profile_picture: string | undefined
+  sender_name: string | undefined
+  sender_profession: ReactNode
   id: number
   sender_id: string
   receiver_id: string
@@ -34,11 +37,9 @@ export async function sendConnectionRequest(
   }
 }
 
-export async function getConnectionRequests(token: string, user_id: string): Promise<ConnectionRequest[]> {
+export async function getConnectionRequests(user_id: string): Promise<ConnectionRequest[]> {
   try {
-    const response = await api.get<ConnectionRequest[]>(`/connections/${user_id}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
+    const response = await api.get<ConnectionRequest[]>(`/connections/${user_id}`)
     return response.data
   } catch (error: any) {
     throw new Error(error.response?.data?.message || "Failed to fetch connection requests")
@@ -51,7 +52,7 @@ export async function respondToConnectionRequest(
   action: "accepted" | "rejected",
 ): Promise<ConnectionRequest> {
   try {
-    const response = await api.post<ConnectionRequest>(
+    const response = await api.put<ConnectionRequest>(
       "/connections/respond",
       { request_id, action },
       { headers: { Authorization: `Bearer ${token}` } },

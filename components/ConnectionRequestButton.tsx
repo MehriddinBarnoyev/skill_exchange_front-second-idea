@@ -4,8 +4,7 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { toast } from "@/components/ui/use-toast"
 import { Loader2, UserPlus, MessageSquare, UserMinus } from "lucide-react"
-import { sendConnectionRequest } from "@/lib/connections"
-import { connectionApi } from "@/lib/api"
+import { deleteFriend, getFriends, sendConnectionRequest } from "@/lib/connections"
 import { ChatModal } from "./ChatModal"
 import { ConfirmDialog } from "./ConfirmDialog"
 
@@ -39,8 +38,8 @@ export function ConnectionRequestButton({
           return
         }
 
-        const friends = await connectionApi.getFriends(userId, token)
-        const isFriend = friends.some((friend) => friend.connected_user_id === receiverId)
+        const friends = await getFriends(userId,)
+        const isFriend = friends.some((friend: { connected_user_id: string }) => friend.connected_user_id === receiverId)
         setIsFriend(isFriend)
       } catch (error) {
         console.error("Error checking friendship status:", error)
@@ -100,7 +99,7 @@ export function ConnectionRequestButton({
         return
       }
 
-      await connectionApi.deleteFriend(userId, receiverId, token)
+      await deleteFriend(userId, receiverId)
       setIsFriend(false)
 
       toast({

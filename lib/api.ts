@@ -28,6 +28,10 @@ export interface Skill {
 }
 
 export interface SkillWithUser extends Skill {
+  profile_pic: any
+  skill_name(skill_name: any): import("react").ReactNode
+  user_name(user_name: any): unknown
+  user_id: any
   username: string
   createdAt: string
 }
@@ -38,71 +42,6 @@ const api = axios.create({
     "Content-Type": "application/json",
   },
 })
-
-export async function register(name: string, email: string, password: string): Promise<AuthResponse> {
-  try {
-    const response = await api.post<AuthResponse>("/auth/register", {
-      name,
-      email,
-      password,
-    })
-    return response.data
-  } catch (error: any) {
-    const errorMessage = error.response?.data?.message || "Registration failed!"
-    throw new Error(errorMessage)
-  }
-}
-
-export async function login(email: string, password: string): Promise<AuthResponse> {
-  try {
-    // Add request logging
-    console.log("Attempting login for email:", email)
-
-    const response = await api.post<AuthResponse>(
-      "/auth/login",
-      {
-        email,
-        password,
-      },
-      {
-        // Add detailed error handling
-        validateStatus: (status) => {
-          return status < 500 // Accept any status code less than 500
-        },
-      },
-    )
-
-    // Log successful response
-    console.log("Login response status:", response.status)
-
-    if (response.status !== 200) {
-      // Handle non-500 errors explicitly
-      throw new Error(response.data?.message || `Login failed with status ${response.status}`)
-    }
-
-    return response.data
-  } catch (error: any) {
-    // Enhanced error logging
-    console.error("Login error details:", {
-      status: error.response?.status,
-      statusText: error.response?.statusText,
-      data: error.response?.data,
-      message: error.message,
-    })
-
-    // More specific error messages based on error type
-    if (error.response?.status === 401) {
-      throw new Error("Invalid email or password")
-    } else if (error.response?.status === 404) {
-      throw new Error("User not found")
-    } else if (error.response?.status === 500) {
-      throw new Error("Server error. Please try again later")
-    }
-
-    // Generic error fallback
-    throw new Error(error.response?.data?.message || "Login failed. Please try again")
-  }
-}
 
 export async function getUserInfo(token: string, userId?: string): Promise<User> {
   try {
@@ -147,10 +86,10 @@ export async function updateUserProfile(token: string, userData: User): Promise<
 export async function addSkill(
   token: string,
   userId: string,
-  skill: { name: string; description: string; level?: "beginner" | "intermediate" | "advanced" },
+  skill: { name: string; description: string; level?: "beginner" | "intermediate" | "advanced" | "expert" },
 ): Promise<Skill> {
   try {
-    const response = await api.post<Skill>(`/users/${userId}/skills`, skill, {
+    const response = await api.post<Skill>(`/skills/addskill/${userId}`, skill, {
       headers: { Authorization: `Bearer ${token}` },
     })
     return response.data

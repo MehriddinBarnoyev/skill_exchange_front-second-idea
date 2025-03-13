@@ -10,6 +10,7 @@ import { useRouter } from "next/navigation";
 import { getFriends } from "@/lib/connections";
 
 interface Connection {
+  connected_user_profile_pic: string | undefined;
   id: string;
   connected_user_id: string;
   connected_user_name: string;
@@ -69,6 +70,7 @@ export function FriendsModal({ isOpen, onClose, userId }: FriendsModalProps) {
   const handleSkillClick = (userId: string) => {
     router.push(`/user/${userId}`);
   };
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg shadow-lg w-full max-w-md max-h-[80vh] overflow-y-auto">
@@ -90,45 +92,48 @@ export function FriendsModal({ isOpen, onClose, userId }: FriendsModalProps) {
             </div>
           ) : (
             <div className="space-y-4">
-              {friends.map((friend) => (
-                <div
-                  key={friend.id}
-                  className="flex items-center justify-between p-4 border rounded-lg"
-                >
-                  <div className="flex items-center space-x-4">
-                    <Avatar>
-                      <AvatarImage
-                        src={friend.connected_user_profile_picture}
-                        alt={friend.connected_user_name}
-                      />
-                      <AvatarFallback>
-                        {friend.connected_user_name.charAt(0)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <h4 className="font-medium">
-                        {friend.connected_user_name}
-                      </h4>
-                      {friend.connected_user_profession && (
-                        <p className="text-sm text-muted-foreground">
-                          {friend.connected_user_profession}
-                        </p>
-                      )}
+              {friends.map((friend) => {
+                const avatarUrl = `http://localhost:5000${friend.connected_user_profile_pic}`;
+                return (
+                  <div
+                    key={friend.id}
+                    className="flex items-center justify-between p-4 border rounded-lg"
+                  >
+                    <div className="flex items-center space-x-4">
+                      <Avatar>
+                        <AvatarImage
+                          src={avatarUrl}
+                          alt={friend.connected_user_name}
+                        />
+                        <AvatarFallback>
+                          {friend.connected_user_name.charAt(0)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <h4 className="font-medium">
+                          {friend.connected_user_name}
+                        </h4>
+                        {friend.connected_user_profession && (
+                          <p className="text-sm text-muted-foreground">
+                            {friend.connected_user_profession}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex space-x-2">
+                      <Button asChild variant="outline" size="sm">
+                        <Link href={`/user/${friend.connected_user_id}`}>
+                          View Profile
+                        </Link>
+                      </Button>
+                      <Button size="sm">
+                        <MessageSquare className="h-4 w-4 mr-2" />
+                        Message
+                      </Button>
                     </div>
                   </div>
-                  <div className="flex space-x-2">
-                    <Button asChild variant="outline" size="sm">
-                      <Link href={`/user/${friend.connected_user_id}`}>
-                        View Profile
-                      </Link>
-                    </Button>
-                    <Button size="sm">
-                      <MessageSquare className="h-4 w-4 mr-2" />
-                      Message
-                    </Button>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
