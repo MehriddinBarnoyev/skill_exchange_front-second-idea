@@ -34,6 +34,7 @@ export default function Login() {
         const response = await initiateLogin(email)
         setUserId(response.user_id)
         setOtpSent(true)
+        setIsLoading(false)
         toast({
           title: "OTP Sent",
           description: "Please check your email for the verification code",

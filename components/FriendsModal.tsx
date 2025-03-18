@@ -50,7 +50,10 @@ export function FriendsModal({ isOpen, onClose, userId }: FriendsModalProps) {
       }
 
       const friendsList = await getFriends(userId);
+      console.log(friendsList);
+      
       setFriends(friendsList);
+      
     } catch (error) {
       console.error("Failed to fetch friends:", error);
       toast({

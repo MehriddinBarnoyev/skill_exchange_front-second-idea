@@ -39,6 +39,7 @@ export function ConnectionRequestButton({
         }
 
         const friends = await getFriends(userId,)
+        
         const isFriend = friends.some((friend: { connected_user_id: string }) => friend.connected_user_id === receiverId)
         setIsFriend(isFriend)
       } catch (error) {

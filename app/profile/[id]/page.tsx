@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button"
 import { toast } from "@/components/ui/use-toast"
 import {
   getUserInfo,
-  updateUserProfile as apiUpdateUserProfile,
   getUserSkills,
   addSkill,
   updateSkill,
@@ -117,7 +116,7 @@ export default function UserProfile() {
     }
 
     try {
-      const updatedUser = await apiUpdateUserProfile(token, updateResult.profile as User)
+      const updatedUser = await updateUserProfile(updateResult.profile as User)
       setUser(updatedUser)
       setEditedUser(updatedUser)
       setIsEditing(false)

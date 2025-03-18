@@ -1,15 +1,18 @@
 "use client";
 
 import type React from "react";
+
 import { useRef, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Upload, Users } from "lucide-react";
+import { Upload, Users, MessageSquare } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 import { ConnectionRequestButton } from "../ConnectionRequestButton";
 import { useRouter } from "next/navigation";
 import { uploadProfileImage } from "@/lib/api";
+
+const API_URL = "http://localhost:5000";
 
 interface ProfileHeaderProps {
   user: any;
@@ -27,9 +30,6 @@ export function ProfileHeader({
   onImageUpload,
 }: ProfileHeaderProps) {
   const [isHovering, setIsHovering] = useState(false);
-  const [avatarUrl, setAvatarUrl] = useState(
-    `http://localhost:5000${user.profile_pic}`
-  ); // Yangi state qo'shildi
   const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
@@ -64,15 +64,11 @@ export function ProfileHeader({
       }
 
       // Use the uploadProfileImage function from api.ts
-      const imagePath = await uploadProfileImage(token, file, user.id);
-      const newAvatarUrl = `http://localhost:5000${imagePath}`;
+      const imagePath = await uploadProfileImage(file, user.id);
 
-      // Lokal state-ni yangilash
-      setAvatarUrl(newAvatarUrl);
-
-      // Yuqori komponentga xabar berish
+      // Update the profile image
       if (onImageUpload) {
-        onImageUpload(newAvatarUrl);
+        onImageUpload(`http://localhost:5000${imagePath}`);
       }
 
       toast({
@@ -90,7 +86,10 @@ export function ProfileHeader({
     }
   };
 
-  ;
+  const handleChatClick = () => {
+    router.push(`/chat?userId=${user.id}`);
+  };
+  console.log(user);
   
 
   return (
@@ -104,8 +103,10 @@ export function ProfileHeader({
             onMouseLeave={() => setIsHovering(false)}
           >
             <Avatar className="w-32 h-32 border-4 border-white">
-              <AvatarImage src={avatarUrl} alt={user.name} />{" "}
-              {/* avatarUrl ishlatilmoqda */}
+              <AvatarImage
+                src={`http://localhost:5000${user.profile_pic}`}
+                alt={user.name}
+              />
               <AvatarFallback className="bg-gray-200 text-gray-600 text-2xl">
                 {user.name.charAt(0)}
               </AvatarFallback>
@@ -144,13 +145,31 @@ export function ProfileHeader({
                   <Users className="h-4 w-4 mr-2" />
                   Friends
                 </Button>
+                <Button
+                  variant="outline"
+                  onClick={handleChatClick}
+                  className="flex items-center"
+                >
+                  <MessageSquare className="h-4 w-4 mr-2" />
+                  Chat
+                </Button>
               </>
             ) : (
-              <ConnectionRequestButton
-                receiverId={user.id}
-                className="bg-gray-700 hover:bg-gray-800"
-                receiverName={user.name}
-              />
+              <div className="flex space-x-2">
+                <ConnectionRequestButton
+                  receiverId={user.id}
+                  className="bg-gray-700 hover:bg-gray-800"
+                  receiverName={user.name}
+                />
+                <Button
+                  variant="outline"
+                  onClick={handleChatClick}
+                  className="flex items-center"
+                >
+                  <MessageSquare className="h-4 w-4 mr-2" />
+                  Chat
+                </Button>
+              </div>
             )}
           </div>
         </div>

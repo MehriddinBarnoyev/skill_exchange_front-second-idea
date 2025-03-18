@@ -3,6 +3,14 @@ import axios from "axios"
 const API_URL = "http://localhost:5000/api"
 
 export interface Connection {
+  id: string
+  connected_user_id: string
+  connected_user_name: string
+  connected_user_profession: string
+  connected_user_profile_pic: string
+}
+
+export interface ConnectionRequest {
   id: number
   sender_id: string
   receiver_id: string
@@ -44,6 +52,19 @@ export async function sendConnectionRequest(
   }
 }
 
+/**
+ * Get all connection requests for a user
+ */
+export async function getConnectionRequests(token: string, user_id: string): Promise<ConnectionRequest[]> {
+  try {
+    const response = await api.get<ConnectionRequest[]>(`/connections/requests/${user_id}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    return response.data
+  } catch (error: any) {
+    throw new Error(error.response?.data?.message || "Failed to fetch connection requests")
+  }
+}
 
 /**
  * Respond to a connection request (accept or reject)
@@ -66,7 +87,7 @@ export async function respondToConnectionRequest(
 }
 
 /**
- * Get all friends (accepted connections) for a user
+ * Get all connections (friends) for a user
  */
 export async function getFriends(user_id: string): Promise<Connection[]> {
   try {
@@ -82,11 +103,13 @@ export async function getFriends(user_id: string): Promise<Connection[]> {
  * Delete a friend connection
  */
 export async function deleteFriend(
+  token: string,
   user_id: string,
   friend_id: string,
 ): Promise<{ success: boolean; message: string }> {
   try {
-    const response = await api.delete(`/connections/delete/${user_id}`, {
+    const response = await api.delete(`/connections/${user_id}`, {
+      headers: { Authorization: `Bearer ${token}` },
       data: { friend_id }, // Send friend_id in the request body
     })
     return response.data

@@ -173,17 +173,12 @@ export async function getUserReviews(userId: string, token: string): Promise<any
   }
 }
 
-export async function uploadProfileImage(token: string, file: File, user_id: string): Promise<string> {
+export async function uploadProfileImage(file: File, user_id: string): Promise<string> {
   const formData = new FormData()
   formData.append("profile_image", file)
 
   try {
-    const response = await api.post(`/users/upload-profile-image/${user_id}`, formData, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "multipart/form-data",
-      },
-    })
+    const response = await api.post(`/users/upload-profile-image/${user_id}`, formData)
     return response.data.imagePath
   } catch (error: any) {
     throw new Error(error.response?.data?.message || "Failed to upload profile image")

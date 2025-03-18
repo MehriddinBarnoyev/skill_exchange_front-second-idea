@@ -1,197 +1,121 @@
-/**
- * Updates a user's profile while preserving the email address.
- *
- * This function accepts the current user profile and new profile data,
- * validates the input, merges the data while ensuring the email remains unchanged,
- * and returns a result object with success status and relevant data.
- *
- * @param currentProfile - The user's current profile data
- * @param newProfileData - The new profile data to be applied
- * @param options - Optional configuration parameters
- * @returns An object containing success status, updated profile, and any error messages
- */
-export interface UserProfile {
-  id: string
-  name: string
-  email: string
-  bio?: string
-  profilePicture?: string
-  location?: string
-  profession?: string
-  education?: string
-  birth_date?: string
-  interests?: string
-  is_profile_complete?: boolean
-  [key: string]: any // Allow for additional fields
-}
+import type { User } from "@/lib/api"
 
 export interface UpdateProfileOptions {
-  /** Fields that should be validated as required */
   requiredFields?: string[]
-  /** Fields that should be excluded from the update (email is always excluded) */
-  excludedFields?: string[]
-  /** Custom validation functions for specific fields */
-  validators?: {
-    [field: string]: (value: any) => { valid: boolean; message?: string }
-  }
-  /** Maximum allowed length for string fields */
+  validators?: { [key: string]: (value: any) => string | null }
   maxFieldLength?: number
 }
 
 export interface UpdateProfileResult {
   success: boolean
-  profile?: UserProfile
-  errors?: {
-    [field: string]: string
-  }
+  profile?: User
   message?: string
+  errors?: { [key: string]: string }
 }
 
-/**
- * Updates a user profile while preserving the email address
- */
+export const profileValidators = {
+  name: (value: string) => {
+    if (!value || value.trim() === "") return "Name is required"
+    if (value.length < 2) return "Name must be at least 2 characters"
+    if (value.length > 50) return "Name must be less than 50 characters"
+    return null
+  },
+  email: (value: string) => {
+    if (!value || value.trim() === "") return "Email is required"
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(value)) return "Please enter a valid email address"
+    return null
+  },
+  birth_date: (value: string) => {
+    if (!value) return null // Birth date is optional
+
+    const date = new Date(value)
+    if (isNaN(date.getTime())) return "Please enter a valid date"
+
+    const now = new Date()
+    if (date > now) return "Birth date cannot be in the future"
+
+    const minDate = new Date("1900-01-01")
+    if (date < minDate) return "Birth date is too far in the past"
+
+    return null
+  },
+  profilePicture: (value: string) => {
+    if (!value) return null // Profile picture is optional
+    return null
+  },
+  interests: (value: string) => {
+    if (!value) return null // Interests are optional
+    if (value.length > 500) return "Interests must be less than 500 characters"
+    return null
+  },
+  bio: (value: string) => {
+    if (!value) return null // Bio is optional
+    if (value.length > 500) return "Bio must be less than 500 characters"
+    return null
+  },
+  location: (value: string) => {
+    if (!value) return null // Location is optional
+    if (value.length > 100) return "Location must be less than 100 characters"
+    return null
+  },
+  profession: (value: string) => {
+    if (!value) return null // Profession is optional
+    if (value.length > 100) return "Profession must be less than 100 characters"
+    return null
+  },
+  gender: (value: string) => {
+    if (!value) return null // Gender is optional
+    const validGenders = ["male", "female", "other", "prefer_not_to_say"]
+    if (!validGenders.includes(value)) return "Please select a valid gender"
+    return null
+  },
+}
+
 export function updateUserProfile(
-  currentProfile: UserProfile,
-  newProfileData: Partial<UserProfile>,
+  originalUser: User,
+  editedUser: User,
   options: UpdateProfileOptions = {},
 ): UpdateProfileResult {
-  // Initialize result
-  const result: UpdateProfileResult = {
-    success: false,
-  }
+  const { requiredFields = [], validators = {}, maxFieldLength = 500 } = options
 
-  // Validate inputs
-  if (!currentProfile || typeof currentProfile !== "object") {
-    return {
-      success: false,
-      message: "Current profile is required and must be an object",
+  // Check for required fields
+  const errors: { [key: string]: string } = {}
+
+  for (const field of requiredFields) {
+    if (!editedUser[field as keyof User]) {
+      errors[field] = `${field.charAt(0).toUpperCase() + field.slice(1)} is required`
     }
   }
 
-  if (!newProfileData || typeof newProfileData !== "object") {
-    return {
-      success: false,
-      message: "New profile data is required and must be an object",
+  // Apply validators
+  for (const [field, validator] of Object.entries(validators)) {
+    const value = editedUser[field as keyof User]
+    const error = validator(value)
+    if (error) {
+      errors[field] = error
     }
   }
 
-  // Initialize errors object
-  const errors: { [field: string]: string } = {}
-
-  // Ensure email is preserved by removing it from newProfileData
-  const sanitizedNewData = { ...newProfileData }
-  delete sanitizedNewData.email
-
-  // Add any additional excluded fields from options
-  if (options.excludedFields && Array.isArray(options.excludedFields)) {
-    options.excludedFields.forEach((field) => {
-      delete sanitizedNewData[field]
-    })
-  }
-
-  // Validate required fields
-  if (options.requiredFields && Array.isArray(options.requiredFields)) {
-    options.requiredFields.forEach((field) => {
-      // Skip email as it's not being updated
-      if (field === "email") return
-
-      // Check if field exists in new data or current profile
-      const value = sanitizedNewData[field] !== undefined ? sanitizedNewData[field] : currentProfile[field]
-
-      if (value === undefined || value === null || value === "") {
-        errors[field] = `${field} is required`
-      }
-    })
-  }
-
-  // Validate field types and apply custom validators
-  for (const [field, value] of Object.entries(sanitizedNewData)) {
-    // Skip null or undefined values (they'll be ignored in the merge)
-    if (value === null || value === undefined) continue
-
-    // Type validation
-    if (typeof currentProfile[field] === "string" && typeof value !== "string") {
-      errors[field] = `${field} must be a string`
-    } else if (typeof currentProfile[field] === "number" && typeof value !== "number") {
-      errors[field] = `${field} must be a number`
-    } else if (typeof currentProfile[field] === "boolean" && typeof value !== "boolean") {
-      errors[field] = `${field} must be a boolean`
-    }
-
-    // String length validation
-    if (typeof value === "string" && options.maxFieldLength && value.length > options.maxFieldLength) {
-      errors[field] = `${field} exceeds maximum length of ${options.maxFieldLength} characters`
-    }
-
-    // Custom validators
-    if (options.validators && options.validators[field]) {
-      const validationResult = options.validators[field](value)
-      if (!validationResult.valid) {
-        errors[field] = validationResult.message || `Invalid ${field}`
-      }
+  // Check field lengths
+  for (const [key, value] of Object.entries(editedUser)) {
+    if (typeof value === "string" && value.length > maxFieldLength) {
+      errors[key] = `${key.charAt(0).toUpperCase() + key.slice(1)} must be less than ${maxFieldLength} characters`
     }
   }
 
-  // If there are validation errors, return them
   if (Object.keys(errors).length > 0) {
     return {
       success: false,
       errors,
-      message: "Validation failed",
+      message: "Please fix the validation errors",
     }
   }
 
-  try {
-    // Merge the current profile with the new data, preserving the email
-    const updatedProfile: UserProfile = {
-      ...currentProfile,
-      ...sanitizedNewData,
-      email: currentProfile.email, // Ensure email is preserved
-    }
-
-    // Return success result with updated profile
-    return {
-      success: true,
-      profile: updatedProfile,
-      message: "Profile updated successfully",
-    }
-  } catch (error) {
-    // Handle any unexpected errors
-    return {
-      success: false,
-      message: error instanceof Error ? error.message : "An unexpected error occurred",
-    }
+  // Return the updated profile
+  return {
+    success: true,
+    profile: editedUser,
   }
-}
-
-/**
- * Common validators for profile fields
- */
-export const profileValidators = {
-  name: (value: string) => ({
-    valid: typeof value === "string" && value.trim().length >= 2,
-    message: "Name must be at least 2 characters",
-  }),
-
-  birth_date: (value: string) => {
-    const date = new Date(value)
-    const isValidDate = !isNaN(date.getTime())
-    const isPastDate = date < new Date()
-
-    return {
-      valid: isValidDate && isPastDate,
-      message: !isValidDate ? "Invalid date format" : !isPastDate ? "Date must be in the past" : undefined,
-    }
-  },
-
-  interests: (value: string) => ({
-    valid: typeof value === "string",
-    message: "Interests must be a string",
-  }),
-
-  profilePicture: (value: string) => ({
-    valid: typeof value === "string" && (value === "" || value.startsWith("http")),
-    message: "Profile picture must be a valid URL",
-  }),
 }
 
