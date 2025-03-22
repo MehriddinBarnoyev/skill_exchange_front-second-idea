@@ -45,7 +45,7 @@ const api = axios.create({
 
 export async function getUserInfo(token: string, userId?: string): Promise<User> {
   try {
-    const response = await api.get<User>(`/users/${userId}`, {
+    const response = await api.get<User>(`users/${userId}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -66,20 +66,6 @@ export async function getUserSkills(token: string, userId?: string): Promise<{ s
   } catch (error: any) {
     const errorMessage = error.response?.data?.message || "Failed to fetch user skills"
     throw new Error(errorMessage)
-  }
-}
-
-export async function updateUserProfile(token: string, userData: User): Promise<User> {
-  try {
-    const response = await api.put(`/users/${userData.id}`, userData, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-    })
-    return response.data
-  } catch (error: any) {
-    throw new Error(error.response?.data?.message || "Failed to update user profile")
   }
 }
 
@@ -173,17 +159,30 @@ export async function getUserReviews(userId: string, token: string): Promise<any
   }
 }
 
-export async function uploadProfileImage(file: File, user_id: string): Promise<string> {
+export async function uploadProfileImage(token: string, file: File, user_id: string): Promise<string> {
   const formData = new FormData()
   formData.append("profile_image", file)
 
+
+  console.log("file", file)
+  console.log("formData", formData);
+
   try {
-    const response = await api.post(`/users/upload-profile-image/${user_id}`, formData)
+    const response = await api.post(`/users/upload-profile-image/${user_id}`, formData, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "multipart/form-data",
+      },
+    })
+    console.log(response.data.imagePath);
+
     return response.data.imagePath
   } catch (error: any) {
     throw new Error(error.response?.data?.message || "Failed to upload profile image")
   }
 }
+
+
 
 export async function completeUserProfile(token: string, user_id: string, formData: { location: string; profession: string; gender: string; education: string; birth_date: string; interests: string }): Promise<User> {
   try {

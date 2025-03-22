@@ -7,7 +7,7 @@ import { toast } from "@/components/ui/use-toast";
 import { Loader2, X, MessageSquare } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { getFriends } from "@/lib/connections";
+import { getFriends } from "@/lib/connection";
 
 interface Connection {
   connected_user_profile_pic: string | undefined;

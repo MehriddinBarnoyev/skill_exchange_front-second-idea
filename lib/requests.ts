@@ -3,6 +3,7 @@ import axios from "axios"
 const API_URL = "http://localhost:5000/api"
 
 export interface ConnectionRequest {
+  sender_profile_pic: any
   sender_profile_picture: string | undefined
   sender_name: string | undefined
   sender_profession: ReactNode

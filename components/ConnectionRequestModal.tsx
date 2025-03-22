@@ -115,7 +115,7 @@ export function ConnectionRequestModal({ isOpen, onClose }: ConnectionRequestMod
                 <div key={request.id} className="flex items-center justify-between p-4 border rounded-lg">
                   <div className="flex items-center space-x-4">
                     <Avatar>
-                      <AvatarImage src={`http://localhost:5000${request.sender_profile_pic}`} alt={request.sender_name} />
+                      <AvatarImage src={`${request.sender_profile_pic}`} alt={request.sender_name} />
                       <AvatarFallback>{request.sender_name?.charAt(0) ?? 'N/A'}</AvatarFallback>
                     </Avatar>
                     <div>

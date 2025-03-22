@@ -1,18 +1,5 @@
-import axios from "axios"
-
-const API_URL = "http://localhost:5000/api"
-
-export interface Message {
-  id: string
-  content: string
-  created_at: string
-  sender_id: string
-  sender_name: string
-  sender_profile_pic: string
-  receiver_id: string
-  receiver_name: string
-  receiver_profile_pic: string
-}
+import { createApiClient, getWithBody, handleApiError, API_BASE_URL } from "./api-client"
+import type { ChatMessage } from "@/types/chat"
 
 export interface SendMessageParams {
   sender_id: string
@@ -20,54 +7,70 @@ export interface SendMessageParams {
   message: string
 }
 
-const api = axios.create({
-  baseURL: API_URL,
-  headers: {
-    "Content-Type": "application/json",
-  },
-})
+export interface GetMessagesParams {
+  userId: string
+  receiverId: string
+  page?: number
+  limit?: number
+  before?: string
+}
 
 /**
  * Send a message to another user
  */
-export async function sendMessage( params: SendMessageParams, user_id:string): Promise<Message> {
+export async function sendMessage(params: SendMessageParams): Promise<ChatMessage> {
   try {
-    const response = await api.post<Message>(`/messages/${user_id}`, params)
+    const apiClient = createApiClient()
+    const response = await apiClient.post<ChatMessage>("/messages", params)
     return response.data
   } catch (error: any) {
-    throw new Error(error.response?.data?.message || "Failed to send message")
+    return handleApiError(error, "Failed to send message")
   }
 }
 
 /**
- * Get messages between two users
+ * Get messages between two users with pagination
+ * Uses GET with a request body as shown in the provided screenshot
  */
-export async function getMessages( userId: string, receiverId: string): Promise<Message[]> {
+export async function getMessages(
+  userId: string,
+  receiverId: string,
+  page = 1,
+  limit = 20,
+  before?: string,
+): Promise<ChatMessage[]> {
   try {
-    const response = await api.post<Message[]>(
-      `/messages/${userId}`,
-      { reciever_id: receiverId },
+    // Build request body with pagination
+    const requestBody: any = {
+      receiver_id: receiverId,
+      page,
+      limit,
+    }
 
-    )
-    console.log(response.data);
+    // Add 'before' timestamp if provided for loading older messages
+    if (before) {
+      requestBody.before = before
+    }
 
-    return response.data
+    // Using getWithBody to match the API structure in the screenshot
+    return await getWithBody<ChatMessage[]>(`/messages/${userId}`, requestBody, {
+      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+    })
   } catch (error: any) {
-    throw new Error(error.response?.data?.message || "Failed to fetch messages")
+    return handleApiError(error, "Failed to fetch messages")
   }
 }
 
 /**
  * Get conversation by match ID
  */
-export async function getConversation(token: string, matchId: string): Promise<Message[]> {
+export async function getConversation(token: string, matchId: string): Promise<ChatMessage[]> {
   try {
-    const response = await api.get<Message[]>(`/messages/conversation/${matchId}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
+    const apiClient = createApiClient(token)
+    const response = await apiClient.get<ChatMessage[]>(`/messages/conversation/${matchId}`)
     return response.data
   } catch (error: any) {
-    throw new Error(error.response?.data?.message || "Failed to fetch conversation")
+    return handleApiError(error, "Failed to fetch conversation")
   }
 }
 
@@ -76,12 +79,17 @@ export async function getConversation(token: string, matchId: string): Promise<M
  */
 export async function deleteMessage(token: string, messageId: string): Promise<{ message: string }> {
   try {
-    const response = await api.delete<{ message: string }>(`/messages/${messageId}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
+    const apiClient = createApiClient(token)
+    const response = await apiClient.delete<{ message: string }>(`/messages/${messageId}`)
     return response.data
   } catch (error: any) {
-    throw new Error(error.response?.data?.message || "Failed to delete message")
+    return handleApiError(error, "Failed to delete message")
   }
 }
+
+// Export the API base URL for use in components
+export const API_URL = API_BASE_URL
+
+// Export Message type for use in components
+export type { ChatMessage as Message }
 

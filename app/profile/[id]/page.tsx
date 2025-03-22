@@ -16,7 +16,7 @@ import {
   type User,
   type Skill,
 } from "@/lib/api"
-import { updateUserProfile, profileValidators } from "@/lib/updateUserProfile"
+import {  profileValidators, updateUserProfile } from "@/lib/updateUserProfile"
 import { Loader2 } from "lucide-react"
 import { ProfileCompletionModal } from "@/components/ProfileCompletionModal"
 import { FriendsModal } from "@/components/FriendsModal"
@@ -47,6 +47,9 @@ export default function UserProfile() {
         }
 
         const userData = await getUserInfo(token, id as string)
+
+        console.log(userData);
+        
         setUser(userData)
         setEditedUser(userData)
         setShowCompleteProfile(!userData.is_profile_complete)
@@ -88,6 +91,8 @@ export default function UserProfile() {
       maxFieldLength: 500,
     })
 
+    console.log(updateResult);
+    
     if (!updateResult.success) {
       if (updateResult.errors) {
         setValidationErrors(updateResult.errors)
@@ -116,8 +121,10 @@ export default function UserProfile() {
     }
 
     try {
-      const updatedUser = await updateUserProfile(updateResult.profile as User)
+      const updatedUser = await updateUserProfile(user, updateResult.profile as User)
       setUser(updatedUser)
+      console.log(`updatedUser: ${updatedUser}`);
+      
       setEditedUser(updatedUser)
       setIsEditing(false)
       toast({

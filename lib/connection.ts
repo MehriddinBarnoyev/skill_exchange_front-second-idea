@@ -1,6 +1,5 @@
-import axios from "axios"
-
-const API_URL = "http://localhost:5000/api"
+import { API_BASE_URL, createApiClient, handleApiError } from "./api-client"
+import { API_URL } from "./messages"
 
 export interface Connection {
   id: string
@@ -24,14 +23,6 @@ export interface ConnectionResponse {
   connection?: Connection
 }
 
-// Setup axios instance with base configuration
-const api = axios.create({
-  baseURL: API_URL,
-  headers: {
-    "Content-Type": "application/json",
-  },
-})
-
 /**
  * Send a connection request to another user
  */
@@ -41,14 +32,11 @@ export async function sendConnectionRequest(
   receiver_id: string,
 ): Promise<ConnectionResponse> {
   try {
-    const response = await api.post<ConnectionResponse>(
-      "/connections/request",
-      { sender_id, receiver_id },
-      { headers: { Authorization: `Bearer ${token}` } },
-    )
+    const apiClient = createApiClient(token)
+    const response = await apiClient.post<ConnectionResponse>("/connections/request", { sender_id, receiver_id })
     return response.data
   } catch (error: any) {
-    throw new Error(error.response?.data?.message || "Failed to send connection request")
+    return handleApiError(error, "Failed to send connection request")
   }
 }
 
@@ -57,12 +45,11 @@ export async function sendConnectionRequest(
  */
 export async function getConnectionRequests(token: string, user_id: string): Promise<ConnectionRequest[]> {
   try {
-    const response = await api.get<ConnectionRequest[]>(`/connections/requests/${user_id}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
+    const apiClient = createApiClient(token)
+    const response = await apiClient.get<ConnectionRequest[]>(`/connections/requests/${user_id}`)
     return response.data
   } catch (error: any) {
-    throw new Error(error.response?.data?.message || "Failed to fetch connection requests")
+    return handleApiError(error, "Failed to fetch connection requests")
   }
 }
 
@@ -75,14 +62,11 @@ export async function respondToConnectionRequest(
   action: "accepted" | "rejected",
 ): Promise<ConnectionResponse> {
   try {
-    const response = await api.post<ConnectionResponse>(
-      "/connections/respond",
-      { request_id, action },
-      { headers: { Authorization: `Bearer ${token}` } },
-    )
+    const apiClient = createApiClient(token)
+    const response = await apiClient.post<ConnectionResponse>("/connections/respond", { request_id, action })
     return response.data
   } catch (error: any) {
-    throw new Error(error.response?.data?.message || "Failed to respond to connection request")
+    return handleApiError(error, "Failed to respond to connection request")
   }
 }
 
@@ -90,12 +74,17 @@ export async function respondToConnectionRequest(
  * Get all connections (friends) for a user
  */
 export async function getFriends(user_id: string): Promise<Connection[]> {
+  // `/connections/friends/${user_id}`
   try {
-    const response = await api.get<Connection[]>(`/connections/friends/${user_id}`)
-
+    const apiClient = createApiClient();
+    const response = await apiClient.get<Connection[]>(`/connections/friends/${user_id}`)
+    
     return response.data
-  } catch (error: any) {
-    throw new Error(error.response?.data?.message || "Failed to fetch friends")
+    
+  } catch (error) {
+    console.log(error);
+    return handleApiError(error, "Failed to fetch friends")
+    
   }
 }
 
@@ -103,13 +92,12 @@ export async function getFriends(user_id: string): Promise<Connection[]> {
  * Delete a friend connection
  */
 export async function deleteFriend(
-  token: string,
   user_id: string,
   friend_id: string,
 ): Promise<{ success: boolean; message: string }> {
   try {
-    const response = await api.delete(`/connections/${user_id}`, {
-      headers: { Authorization: `Bearer ${token}` },
+    const apiClient = createApiClient()
+    const response = await apiClient.delete(`/connections/delete/${user_id}`, {
       data: { friend_id }, // Send friend_id in the request body
     })
     return response.data
@@ -117,7 +105,7 @@ export async function deleteFriend(
     if (error.response?.status === 404) {
       throw new Error("Connection not found")
     }
-    throw new Error(error.response?.data?.message || "Failed to delete friend")
+    return handleApiError(error, "Failed to delete friend")
   }
 }
 

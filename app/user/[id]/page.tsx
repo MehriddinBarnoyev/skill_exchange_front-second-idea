@@ -76,7 +76,7 @@ export default function UserProfilePage() {
           <div className="flex flex-col md:flex-row items-start">
             <Avatar className="h-32 w-32 border-4 border-white shadow-xl">
               <AvatarImage
-                src={`http://localhost:5000${user.profile_pic}`}
+                src={`${user.profile_pic}`}
                 alt={user.name}
               />
               <AvatarFallback className="text-2xl bg-gray-200">
