@@ -62,6 +62,27 @@ export async function getMessages(
 }
 
 /**
+ * Mark messages as read
+ * @param sender_id The ID of the user who sent the messages
+ */
+export async function markMessagesAsRead(sender_id: string): Promise<{ success: boolean; message: string }> {
+  try {
+    const token = localStorage.getItem("token")
+    if (!token) {
+      throw new Error("Authentication token not found")
+    }
+
+    const apiClient = createApiClient(token)
+    const response = await apiClient.put<{ success: boolean; message: string }>("/messages/mark-as-read", {
+      sender_id,
+    })
+    return response.data
+  } catch (error: any) {
+    return handleApiError(error, "Failed to mark messages as read")
+  }
+}
+
+/**
  * Get conversation by match ID
  */
 export async function getConversation(token: string, matchId: string): Promise<ChatMessage[]> {

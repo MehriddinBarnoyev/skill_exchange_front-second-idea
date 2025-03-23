@@ -7,7 +7,7 @@ import { useEffect, useState } from "react"
 import type { ToastActionElement, ToastProps } from "@/components/ui/toast"
 
 const TOAST_LIMIT = 5
-const TOAST_REMOVE_DELAY = 5000
+const TOAST_REMOVE_DELAY = 5010
 
 type ToasterToast = ToastProps & {
   id: string

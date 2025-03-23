@@ -78,7 +78,7 @@ export function VirtualizedFriendsList({
               >
                 <div className="relative">
                   <Avatar className="h-12 w-12">
-                    <AvatarImage src={`http://localhost:5000${friend.profile_pic}`} alt={friend.name} />
+                    <AvatarImage src={`http://localhost:5010${friend.profile_pic}`} alt={friend.name} />
                     <AvatarFallback>{friend.name.charAt(0)}</AvatarFallback>
                   </Avatar>
                   {isUserActive(friend.last_active) && (

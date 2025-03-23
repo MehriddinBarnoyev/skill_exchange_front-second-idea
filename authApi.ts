@@ -1,6 +1,6 @@
 import axios, { type AxiosError } from "axios"
 
-const API_URL = "http://localhost:5000/api"
+const API_URL = "http://localhost:5010/api"
 
 export interface AuthResponse {
   token: string

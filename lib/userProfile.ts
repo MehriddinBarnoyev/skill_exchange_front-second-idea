@@ -1,6 +1,6 @@
 import axios from "axios"
 
-const API_URL = "http://localhost:5000/api"
+const API_URL = "http://localhost:5010/api"
 
 export interface User {
   profile_pic: any

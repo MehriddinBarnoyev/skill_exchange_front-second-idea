@@ -17,7 +17,7 @@ import {
 import { useRouter } from "next/navigation";
 import type { SkillWithUser } from "@/lib/api";
 
-const API_URL = "http://localhost:5000";
+const API_URL = "http://localhost:5010";
 
 interface SkillCardProps {
   skill: SkillWithUser;

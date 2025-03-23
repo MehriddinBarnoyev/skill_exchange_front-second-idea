@@ -1,8 +1,9 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
 
 export interface Friend {
   id: string
@@ -26,10 +27,15 @@ interface FriendsListProps {
 export function FriendsList({ friends, selectedFriendId, onSelectFriend }: FriendsListProps) {
   const [searchTerm, setSearchTerm] = useState("")
 
-  const filteredFriends = [...friends].sort(
-    (a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()
-  );
-  
+  const filteredFriends = useMemo(() => {
+    return friends
+      .filter(
+        (friend) =>
+          friend.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          friend.profession?.toLowerCase().includes(searchTerm.toLowerCase()),
+      )
+      .sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime())
+  }, [friends, searchTerm])
 
   const isUserActive = (lastActive: string | undefined) => {
     if (!lastActive) return false
@@ -37,7 +43,6 @@ export function FriendsList({ friends, selectedFriendId, onSelectFriend }: Frien
     const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000)
     return new Date(lastActive) > fiveMinutesAgo
   }
-  
 
   return (
     <div className="w-full md:w-1/3 border-r border-gray-200 overflow-y-auto">
@@ -62,7 +67,7 @@ export function FriendsList({ friends, selectedFriendId, onSelectFriend }: Frien
               key={friend.id}
               className={`p-3 flex items-center hover:bg-gray-50 cursor-pointer ${
                 selectedFriendId === friend.id ? "bg-gray-100" : ""
-              }`}
+              } ${friend.unread_count && friend.unread_count > 0 ? "bg-blue-50" : ""}`}
               onClick={() => onSelectFriend(friend)}
             >
               <div className="relative">
@@ -76,17 +81,27 @@ export function FriendsList({ friends, selectedFriendId, onSelectFriend }: Frien
               </div>
               <div className="ml-3 flex-1">
                 <div className="flex justify-between items-center">
-                  <h3 className="font-medium">{friend.name}</h3>
+                  <h3
+                    className={`font-medium ${friend.unread_count && friend.unread_count > 0 ? "font-semibold text-black" : ""}`}
+                  >
+                    {friend.name}
+                  </h3>
                   {friend.last_message_time && (
                     <span className="text-xs text-gray-500">{friend.last_message_time}</span>
                   )}
                 </div>
                 <div className="flex justify-between items-center">
-                  <p className="text-sm text-gray-500 truncate max-w-[150px]">{friend.profession || "No profession"}</p>
+                  <p
+                    className={`text-sm truncate max-w-[150px] ${
+                      friend.unread_count && friend.unread_count > 0 ? "text-black font-medium" : "text-gray-500"
+                    }`}
+                  >
+                    {friend.last_message || friend.profession || "No profession"}
+                  </p>
                   {friend.unread_count && friend.unread_count > 0 && (
-                    <span className="bg-primary text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                    <Badge className="bg-primary text-white text-xs rounded-full h-5 min-w-5 flex items-center justify-center px-1.5">
                       {friend.unread_count}
-                    </span>
+                    </Badge>
                   )}
                 </div>
               </div>

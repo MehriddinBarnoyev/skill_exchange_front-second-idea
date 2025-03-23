@@ -1,7 +1,7 @@
 import axios, { type AxiosInstance, type AxiosRequestConfig } from "axios"
 import { log } from "console"
 
-const API_URL = "http://localhost:5000/api"
+const API_URL = "http://localhost:5010/api"
 
 /**
  * Creates a configured Axios instance for API requests

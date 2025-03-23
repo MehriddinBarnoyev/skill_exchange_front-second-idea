@@ -6,9 +6,10 @@ import { Card } from "@/components/ui/card"
 import { toast } from "@/components/ui/use-toast"
 import { Loader2 } from "lucide-react"
 import { getFriends } from "@/lib/connection"
-import { sendMessage, getMessages, API_URL } from "@/lib/messages"
+import { sendMessage, getMessages, markMessagesAsRead, API_URL } from "@/lib/messages"
 import type { Friend } from "@/components/chat/FriendsList"
 import type { Message } from "@/lib/messages"
+import { format } from "date-fns"
 
 // Import components
 import { FriendsList } from "@/components/chat/FriendsList"
@@ -62,7 +63,7 @@ export default function ChatPage() {
     }
   }, [router])
 
-  // Fetch friends list
+  // Fetch friends list with unread counts
   useEffect(() => {
     const fetchConnections = async () => {
       try {
@@ -70,23 +71,27 @@ export default function ChatPage() {
 
         const connections = await getFriends(userId)
 
-        // Transform to Friend interface
-        const formattedFriends = connections.map((connection) => ({
-          id: connection.connected_user_id,
-          connectionId: connection.id,
-          name: connection.connected_user_name,
-          profession: connection.connected_user_profession,
-          profile_pic: connection.connected_user_profile_pic,
-          last_active: new Date(Date.now() - Math.random() * 3600000).toISOString(), // Random last active time
-          created_at: connection.created_at || new Date().toISOString(), // Use connection creation date if available
-        }))
+        // Transform to Friend interface and add unread counts
+        const formattedFriends = connections.map((connection) => {
+          // Calculate unread count from the last message
+          // In a real app, this would come from the API
+          const unreadCount = Math.floor(Math.random() * 5) // Simulate random unread counts for demo
 
-        // Sort friends by creation date (newest first)
-        const sortedFriends = [...formattedFriends].sort((a, b) => {
-          return new Date(b.created_at || "").getTime() - new Date(a.created_at || "").getTime()
+          return {
+            id: connection.connected_user_id,
+            connectionId: connection.id,
+            name: connection.connected_user_name,
+            profession: connection.connected_user_profession,
+            profile_pic: connection.connected_user_profile_pic,
+            last_active: new Date(Date.now() - Math.random() * 3600000).toISOString(), // Random last active time
+            created_at: connection.created_at || new Date().toISOString(), // Use connection creation date if available
+            unread_count: unreadCount > 0 ? unreadCount : 0,
+            last_message: connection.last_message || "",
+            last_message_time: connection.last_message_time || "",
+          }
         })
 
-        setFriends(sortedFriends)
+        setFriends(formattedFriends)
 
         // Check if there's a userId in the URL params to auto-select a chat
         const chatWithUserId = searchParams.get("userId")
@@ -125,13 +130,13 @@ export default function ChatPage() {
     try {
       const fetchedMessages = await getMessages(userId, selectedFriend.id)
 
-      // Process messages to add names and profile pics
+      // Process messages to add names and profile pics if needed
       if (fetchedMessages.length > 0) {
         fetchedMessages.forEach((message) => {
-          if (message.sender_id === userId) {
+          if (message.sender_id === userId && !message.sender_name) {
             message.sender_name = "You"
             message.sender_profile_pic = ""
-          } else {
+          } else if (message.sender_id === selectedFriend.id && !message.sender_name) {
             message.sender_name = selectedFriend.name
             message.sender_profile_pic = selectedFriend.profile_pic
           }
@@ -142,13 +147,17 @@ export default function ChatPage() {
       const messagesJson = JSON.stringify(fetchedMessages)
       if (messagesJson !== lastMessagesRef.current) {
         lastMessagesRef.current = messagesJson
+        setMessages(fetchedMessages)
 
-        // Sort messages by creation date (oldest first)
-        const sortedMessages = [...fetchedMessages].sort(
-          (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
+        // Update unread count for the selected friend
+        const unreadCount = fetchedMessages.filter(
+          (msg) => msg.sender_id === selectedFriend.id && msg.isread === false,
+        ).length
+
+        // Update the friends list with new unread count
+        setFriends((prev) =>
+          prev.map((friend) => (friend.id === selectedFriend.id ? { ...friend, unread_count: unreadCount } : friend)),
         )
-
-        setMessages(sortedMessages)
       }
     } catch (error) {
       console.error("Failed to fetch messages:", error)
@@ -162,6 +171,28 @@ export default function ChatPage() {
       }
     }
   }, [selectedFriend, userId])
+
+  // Handle marking messages as read
+  const handleMessagesRead = async () => {
+    if (!selectedFriend) return
+
+    try {
+      // Mark all messages from this sender as read
+      await markMessagesAsRead(selectedFriend.id)
+
+      // Update local message state to mark these as read
+      setMessages((prev) =>
+        prev.map((msg) => (msg.sender_id === selectedFriend.id && !msg.isread ? { ...msg, isread: true } : msg)),
+      )
+
+      // Update unread count for the selected friend
+      setFriends((prev) =>
+        prev.map((friend) => (friend.id === selectedFriend.id ? { ...friend, unread_count: 0 } : friend)),
+      )
+    } catch (error) {
+      console.error("Failed to mark messages as read:", error)
+    }
+  }
 
   // Fetch messages when a friend is selected and start polling
   useEffect(() => {
@@ -200,17 +231,12 @@ export default function ChatPage() {
     if (!message.trim() || !selectedFriend || !userId) return
 
     try {
-      await sendMessage({
-        sender_id: userId,
-        reciever_id: selectedFriend.id,
-        message,
-      })
-
       // Optimistically add message to UI
       const optimisticMessage: Message = {
-        id: Date.now().toString(), // Temporary ID
+        id: `temp-${Date.now()}`, // Temporary ID
         content: message,
         created_at: new Date().toISOString(),
+        isread: false,
         sender_id: userId,
         sender_name: "You", // Will be replaced when refreshed
         sender_profile_pic: "",
@@ -219,18 +245,37 @@ export default function ChatPage() {
         receiver_profile_pic: selectedFriend.profile_pic,
       }
 
-      // Add new message and sort by creation date
-      const updatedMessages = [...messages, optimisticMessage].sort(
-        (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
+      // Update UI immediately with optimistic message
+      setMessages((prev) => [...prev, optimisticMessage])
+
+      // Send message to server
+      await sendMessage({
+        sender_id: userId,
+        reciever_id: selectedFriend.id,
+        message,
+      })
+
+      // Update the last message for this friend in the friends list
+      setFriends((prev) =>
+        prev.map((friend) =>
+          friend.id === selectedFriend.id
+            ? {
+                ...friend,
+                last_message: message,
+                last_message_time: format(new Date(), "h:mm a"),
+              }
+            : friend,
+        ),
       )
 
-      setMessages(updatedMessages)
-      lastMessagesRef.current = JSON.stringify(updatedMessages)
-
-      // Immediately fetch messages to get the actual message with server ID
+      // Fetch updated messages from server (will replace optimistic message with real one)
       await fetchMessages()
     } catch (error) {
       console.error("Failed to send message:", error)
+
+      // Remove the optimistic message on error
+      setMessages((prev) => prev.filter((msg) => !msg.id.startsWith("temp-")))
+
       toast({
         title: "Error",
         description: "Failed to send message. Please try again.",
@@ -242,6 +287,14 @@ export default function ChatPage() {
 
   const handleSelectFriend = (friend: Friend) => {
     setSelectedFriend(friend)
+
+    // When selecting a friend, mark their messages as read
+    if (friend.unread_count && friend.unread_count > 0) {
+      // Small delay to ensure the chat is loaded first
+      setTimeout(() => {
+        handleMessagesRead()
+      }, 500)
+    }
   }
 
   const handleBackToFriendsList = () => {
@@ -277,7 +330,7 @@ export default function ChatPage() {
               showFriendsList={showFriendsList}
               onBackToFriendsList={handleBackToFriendsList}
             />
-            <MessageList messages={messages} userId={userId} apiUrl={API_URL} />
+            <MessageList messages={messages} userId={userId} apiUrl={API_URL} onMessagesRead={handleMessagesRead} />
             <MessageInput onSendMessage={handleSendMessage} />
           </div>
         ) : (

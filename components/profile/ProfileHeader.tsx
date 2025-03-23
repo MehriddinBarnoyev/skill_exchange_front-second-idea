@@ -11,7 +11,7 @@ import { ConnectionRequestButton } from "../ConnectionRequestButton"
 import { useRouter } from "next/navigation"
 import { uploadProfileImage } from "@/lib/api"
 
-const API_URL = "http://localhost:5000"
+const API_URL = "http://localhost:5010"
 
 interface ProfileHeaderProps {
   user: any
@@ -94,6 +94,9 @@ export function ProfileHeader({ user, isOwnProfile, onEdit, onShowFriends, onIma
       URL.revokeObjectURL(tempImageUrl)
     }
   }
+
+  console.log(profilePic);
+  
 
   return (
     <Card className="mb-8 shadow-sm overflow-hidden">

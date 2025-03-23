@@ -96,7 +96,7 @@ export function FriendsModal({ isOpen, onClose, userId }: FriendsModalProps) {
           ) : (
             <div className="space-y-4">
               {friends.map((friend) => {
-                const avatarUrl = `http://localhost:5000${friend.connected_user_profile_pic}`;
+                const avatarUrl = `http://localhost:5010${friend.connected_user_profile_pic}`;
                 return (
                   <div
                     key={friend.id}

@@ -40,7 +40,7 @@ export function ProfileImageUpload({ userId, onImageUpload }: ProfileImageUpload
 
     try {
       const token = localStorage.getItem("token")
-      const response = await fetch(`http://localhost:5000/api/users/upload-profile-image/${userId}`, {
+      const response = await fetch(`http://localhost:5010/api/users/upload-profile-image/${userId}`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,

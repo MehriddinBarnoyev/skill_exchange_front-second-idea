@@ -56,7 +56,7 @@ export function ChatHeader({ friend, isMobileView, showFriendsList, onBackToFrie
           </Button>
         )}
         <Avatar className="h-10 w-10">
-          <AvatarImage src={`http://localhost:5000${friend.profile_pic}`} alt={friend.name} />
+          <AvatarImage src={friend.profile_pic} alt={friend.name} />
           <AvatarFallback>{friend.name.charAt(0)}</AvatarFallback>
         </Avatar>
         <div className="ml-3">

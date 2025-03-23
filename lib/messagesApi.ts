@@ -1,6 +1,6 @@
 import axios from "axios"
 
-const API_URL = "http://localhost:5000/api"
+const API_URL = "http://localhost:5010/api"
 
 // Types
 export interface Message {
@@ -37,6 +37,7 @@ export const messagesApi = {
   getMessages: async (userId: string, token: string): Promise<Message[]> => {
     try {
       const response = await apiClient(token).get(`/messages/${userId}`)
+      
       return response.data
     } catch (error) {
       console.error("Error fetching messages:", error)
