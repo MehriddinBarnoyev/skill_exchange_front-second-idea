@@ -1,3 +1,7 @@
+/**
+ * Chat related type definitions
+ */
+
 export interface Friend {
   id: string
   connectionId: string

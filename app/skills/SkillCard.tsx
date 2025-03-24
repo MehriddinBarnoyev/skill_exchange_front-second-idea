@@ -16,8 +16,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import type { SkillWithUser } from "@/lib/api";
-
-const API_URL = "http://localhost:5010";
+import { API_URL } from "@/lib/messages";
 
 interface SkillCardProps {
   skill: SkillWithUser;
@@ -73,7 +72,13 @@ export function SkillCard({ skill }: SkillCardProps) {
         <div className="flex items-center mt-4 pt-4 border-t border-gray-100">
           <Avatar className="h-8 w-8 mr-2">
             <AvatarImage
-              src={skill.profile_pic ? `${skill.profile_pic}` : undefined}
+              src={
+                skill.profile_pic
+                  ? skill.profile_pic.startsWith("http")
+                    ? skill.profile_pic
+                    : `${API_URL}${skill.profile_pic}`
+                  : undefined
+              }
               alt={skill.user_name}
             />
             <AvatarFallback className="bg-gray-200 text-gray-600">

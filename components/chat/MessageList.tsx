@@ -1,10 +1,16 @@
 "use client"
 
+/**
+ * MessageList component
+ * Displays the list of messages in a conversation
+ * Handles scrolling, read receipts, and typing indicators
+ */
 import { useRef, useEffect, useState, useMemo } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { format } from "date-fns"
 import { ChevronDown, Circle } from "lucide-react"
+import { TypingIndicator } from "./TypingIndicator"
 import type { Message } from "@/lib/messages"
 
 interface MessageListProps {
@@ -12,9 +18,10 @@ interface MessageListProps {
   userId: string | null
   apiUrl: string
   onMessagesRead?: () => Promise<void>
+  isTyping?: boolean
 }
 
-export function MessageList({ messages, userId, apiUrl, onMessagesRead }: MessageListProps) {
+export function MessageList({ messages, userId, apiUrl, onMessagesRead, isTyping = false }: MessageListProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const [isNearBottom, setIsNearBottom] = useState(true)
@@ -113,6 +120,13 @@ export function MessageList({ messages, userId, apiUrl, onMessagesRead }: Messag
     setPrevMessagesLength(messages.length)
   }, [messages.length, isNearBottom, prevMessagesLength, userId, messages])
 
+  // Scroll to bottom when typing indicator appears
+  useEffect(() => {
+    if (isTyping && isNearBottom) {
+      scrollToBottom("smooth")
+    }
+  }, [isTyping, isNearBottom])
+
   // Initial scroll to bottom
   useEffect(() => {
     if (messages.length > 0) {
@@ -146,7 +160,16 @@ export function MessageList({ messages, userId, apiUrl, onMessagesRead }: Messag
           <div key={message.id} className={`flex ${isOwnMessage ? "justify-end" : "justify-start"}`}>
             {!isOwnMessage && (
               <Avatar className="h-8 w-8 mr-2 mt-1">
-                <AvatarImage src={message.sender_profile_pic} alt={message.sender_name} />
+                <AvatarImage
+                  src={
+                    message.sender_profile_pic
+                      ? message.sender_profile_pic.startsWith("http")
+                        ? message.sender_profile_pic
+                        : `${apiUrl}${message.sender_profile_pic}`
+                      : undefined
+                  }
+                  alt={message.sender_name}
+                />
                 <AvatarFallback>{message.sender_name?.charAt(0) || "?"}</AvatarFallback>
               </Avatar>
             )}
@@ -172,6 +195,10 @@ export function MessageList({ messages, userId, apiUrl, onMessagesRead }: Messag
           </div>
         )
       })}
+
+      {/* Typing indicator */}
+      {isTyping && <TypingIndicator />}
+
       <div ref={messagesEndRef} />
 
       {showScrollButton && (

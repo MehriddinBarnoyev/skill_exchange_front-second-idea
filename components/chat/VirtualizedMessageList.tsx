@@ -81,7 +81,16 @@ export function VirtualizedMessageList({
           <div key={message.id} className={`flex ${isOwnMessage ? "justify-end" : "justify-start"} mb-4`}>
             {!isOwnMessage && (
               <Avatar className="h-8 w-8 mr-2 mt-1">
-                <AvatarImage src={`${apiUrl}${message.sender_profile_pic}`} alt={message.sender_name} />
+                <AvatarImage
+                  src={
+                    message.sender_profile_pic
+                      ? message.sender_profile_pic.startsWith("http")
+                        ? message.sender_profile_pic
+                        : `${apiUrl}${message.sender_profile_pic}`
+                      : undefined
+                  }
+                  alt={message.sender_name}
+                />
                 <AvatarFallback>{message.sender_name?.charAt(0) || "?"}</AvatarFallback>
               </Avatar>
             )}

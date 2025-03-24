@@ -4,6 +4,7 @@ import { useState, useMemo } from "react"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
+import { API_URL } from "@/lib/messages"
 
 export interface Friend {
   id: string
@@ -22,9 +23,10 @@ interface FriendsListProps {
   friends: Friend[]
   selectedFriendId: string | null
   onSelectFriend: (friend: Friend) => void
+  onlineUsers?: string[]
 }
 
-export function FriendsList({ friends, selectedFriendId, onSelectFriend }: FriendsListProps) {
+export function FriendsList({ friends, selectedFriendId, onSelectFriend, onlineUsers = [] }: FriendsListProps) {
   const [searchTerm, setSearchTerm] = useState("")
 
   const filteredFriends = useMemo(() => {
@@ -34,14 +36,31 @@ export function FriendsList({ friends, selectedFriendId, onSelectFriend }: Frien
           friend.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
           friend.profession?.toLowerCase().includes(searchTerm.toLowerCase()),
       )
-      .sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime())
-  }, [friends, searchTerm])
+      .sort((a, b) => {
+        // First sort by unread count (descending)
+        if ((a.unread_count || 0) !== (b.unread_count || 0)) {
+          return (b.unread_count || 0) - (a.unread_count || 0)
+        }
 
-  const isUserActive = (lastActive: string | undefined) => {
-    if (!lastActive) return false
-    // Consider active if last active within 5 minutes
-    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000)
-    return new Date(lastActive) > fiveMinutesAgo
+        // Then by online status
+        const aIsOnline = onlineUsers.includes(a.id)
+        const bIsOnline = onlineUsers.includes(b.id)
+        if (aIsOnline !== bIsOnline) {
+          return aIsOnline ? -1 : 1
+        }
+
+        // Then by last message time (most recent first)
+        if (a.last_message_time && b.last_message_time) {
+          return new Date(b.last_message_time).getTime() - new Date(a.last_message_time).getTime()
+        }
+
+        // Finally by creation date
+        return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()
+      })
+  }, [friends, searchTerm, onlineUsers])
+
+  const isUserOnline = (userId: string) => {
+    return onlineUsers.includes(userId)
   }
 
   return (
@@ -72,10 +91,19 @@ export function FriendsList({ friends, selectedFriendId, onSelectFriend }: Frien
             >
               <div className="relative">
                 <Avatar className="h-12 w-12">
-                  <AvatarImage src={friend.profile_pic} alt={friend.name} />
+                  <AvatarImage
+                    src={
+                      friend.profile_pic
+                        ? friend.profile_pic.startsWith("http")
+                          ? friend.profile_pic
+                          : `${API_URL}${friend.profile_pic}`
+                        : undefined
+                    }
+                    alt={friend.name}
+                  />
                   <AvatarFallback>{friend.name.charAt(0)}</AvatarFallback>
                 </Avatar>
-                {isUserActive(friend.last_active) && (
+                {isUserOnline(friend.id) && (
                   <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-green-500 border-2 border-white"></span>
                 )}
               </div>

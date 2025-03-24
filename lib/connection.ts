@@ -2,6 +2,11 @@ import { API_BASE_URL, createApiClient, handleApiError } from "./api-client"
 import { API_URL } from "./messages"
 
 export interface Connection {
+  last_active: string
+  created_at: string
+  unread_count: number
+  last_message: string
+  last_message_time: string
   id: string
   connected_user_id: string
   connected_user_name: string

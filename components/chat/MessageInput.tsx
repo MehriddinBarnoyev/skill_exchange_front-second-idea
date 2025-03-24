@@ -1,7 +1,11 @@
 "use client"
 
+/**
+ * MessageInput component
+ * Handles user input for sending messages
+ * Includes typing indicator functionality
+ */
 import type React from "react"
-
 import { useState, useRef, useEffect } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -9,12 +13,14 @@ import { Loader2, Send } from "lucide-react"
 
 interface MessageInputProps {
   onSendMessage: (message: string) => Promise<void>
+  onInputChange?: (value: string) => void
 }
 
-export function MessageInput({ onSendMessage }: MessageInputProps) {
+export function MessageInput({ onSendMessage, onInputChange }: MessageInputProps) {
   const [message, setMessage] = useState("")
   const [isSending, setIsSending] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   // Focus input on component mount
   useEffect(() => {
@@ -41,6 +47,36 @@ export function MessageInput({ onSendMessage }: MessageInputProps) {
     }
   }
 
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value
+    setMessage(value)
+
+    // Debounce typing indicator
+    if (onInputChange) {
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current)
+      }
+
+      onInputChange(value)
+
+      // Stop typing indicator after 1 second of inactivity
+      typingTimeoutRef.current = setTimeout(() => {
+        if (value.length > 0) {
+          onInputChange("")
+        }
+      }, 1000)
+    }
+  }
+
+  // Clean up timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current)
+      }
+    }
+  }, [])
+
   return (
     <div className="p-3 border-t border-gray-200">
       <div className="flex items-center space-x-2">
@@ -48,7 +84,7 @@ export function MessageInput({ onSendMessage }: MessageInputProps) {
           ref={inputRef}
           placeholder="Type a message..."
           value={message}
-          onChange={(e) => setMessage(e.target.value)}
+          onChange={handleChange}
           onKeyDown={handleKeyPress}
           className="flex-1"
           disabled={isSending}

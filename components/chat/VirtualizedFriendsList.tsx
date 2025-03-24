@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Loader2 } from "lucide-react"
 import { useVirtualScroll } from "@/hooks/useVirtualScroll"
 import type { Friend } from "@/types/chat"
+import { API_URL } from "@/lib/messages"
 
 interface VirtualizedFriendsListProps {
   friends: Friend[]
@@ -78,7 +79,16 @@ export function VirtualizedFriendsList({
               >
                 <div className="relative">
                   <Avatar className="h-12 w-12">
-                    <AvatarImage src={`http://localhost:5010${friend.profile_pic}`} alt={friend.name} />
+                    <AvatarImage
+                      src={
+                        friend.profile_pic
+                          ? friend.profile_pic.startsWith("http")
+                            ? friend.profile_pic
+                            : `${API_URL}${friend.profile_pic}`
+                          : undefined
+                      }
+                      alt={friend.name}
+                    />
                     <AvatarFallback>{friend.name.charAt(0)}</AvatarFallback>
                   </Avatar>
                   {isUserActive(friend.last_active) && (
